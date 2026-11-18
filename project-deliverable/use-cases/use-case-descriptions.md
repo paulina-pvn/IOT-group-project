@@ -1,6 +1,5 @@
 # Use Case Descriptions — ComfortRoom
 
-Diagram: `use-case-diagram.pdf` (source `.mdj` from StarUML in the same folder).
 
 ## Actors
 
