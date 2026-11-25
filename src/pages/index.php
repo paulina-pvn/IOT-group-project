@@ -14,8 +14,7 @@
             <h2>ComfortRoom</h2>
             <div class="nav-links">
                 <a href="index.php">Home</a>
-                <a href="#">Find a Room</a>
-                <a href="#">About</a>
+                <a href="find-room.php">Find a Room</a>                <a href="#">About</a>
             </div>
         </nav>
     </header>
@@ -29,7 +28,7 @@
                 comfort, air quality, and your preferences.
             </p>
 
-            <a href="#" class="primary-button">
+            <a href="find-room.php" class="primary-button">
                 Find a Room
             </a>
         </section>
