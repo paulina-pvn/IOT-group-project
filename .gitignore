@@ -1,3 +1,6 @@
 .DS_Store
 # Local notes for planning. Not part of the deliverable.
 project-deliverable/criteria/
+
+# Database password. Do not commit.
+.env

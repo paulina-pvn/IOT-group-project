@@ -1,67 +1,51 @@
 
 <?php
-// Temporary room data for frontend development.
-// These values are examples, not live sensor readings.
-ini_set('display_errors',1);
+ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$rooms = [
-    [
-        'name' => 'Room 1',
-        'capacity' => 30,
-        'projector' => true,
-        'computers' => false,
-        'temperature' => 22.1,
-        'humidity' => 45,
-        'co2' => 650,
-        'light' => 420,
-        'noise' => 38
-    ],
-    [
-        'name' => 'Room 2',
-        'capacity' => 50,
-        'projector' => true,
-        'computers' => true,
-        'temperature' => 25.3,
-        'humidity' => 58,
-        'co2' => 1150,
-        'light' => 310,
-        'noise' => 54
-    ],
-    [
-        'name' => 'Room 3',
-        'capacity' => 20,
-        'projector' => false,
-        'computers' => true,
-        'temperature' => 21.5,
-        'humidity' => 42,
-        'co2' => 590,
-        'light' => 480,
-        'noise' => 35
-    ],
-    [
-        'name' => 'Room 4',
-        'capacity' => 40,
-        'projector' => true,
-        'computers' => false,
-        'temperature' => 23.2,
-        'humidity' => 49,
-        'co2' => 800,
-        'light' => 390,
-        'noise' => 43
-    ],
-    [
-        'name' => 'Room 5',
-        'capacity' => 60,
-        'projector' => true,
-        'computers' => true,
-        'temperature' => 26.1,
-        'humidity' => 65,
-        'co2' => 1400,
-        'light' => 270,
-        'noise' => 61
-    ]
-];
+require dirname(__DIR__) . '/db.php';
+
+$databaseError = null;
+$rooms = [];
+
+try {
+    $rows = db_rows(
+        'SELECT r.name,
+                r.seating_capacity AS capacity,
+                r.videoprojector AS projector,
+                (r.computers > 0) AS computers,
+                round(s.temperature::numeric, 1) AS temperature,
+                round(s.humidity::numeric, 0) AS humidity,
+                round(s.co2::numeric, 0) AS co2,
+                round(s.light::numeric, 0) AS light,
+                round(s.sound::numeric, 0) AS noise
+         FROM sensor_rooms r
+         JOIN LATERAL (
+             SELECT temperature, humidity, co2, light, sound
+             FROM sensor_readings
+             WHERE room_name = r.name
+             ORDER BY measured_at DESC
+             LIMIT 1
+         ) s ON true
+         ORDER BY r.name'
+    );
+
+    foreach ($rows as $row) {
+        $rooms[] = [
+            'name' => $row['name'],
+            'capacity' => (int) $row['capacity'],
+            'projector' => in_array($row['projector'], [true, 't', 'true', '1', 1], true),
+            'computers' => in_array($row['computers'], [true, 't', 'true', '1', 1], true),
+            'temperature' => (float) $row['temperature'],
+            'humidity' => (float) $row['humidity'],
+            'co2' => (float) $row['co2'],
+            'light' => (float) $row['light'],
+            'noise' => (float) $row['noise'],
+        ];
+    }
+} catch (RuntimeException $exception) {
+    $databaseError = $exception->getMessage();
+}
 
 // Simple illustrative score for testing the interface.
 // The final AHP decision engine will replace this.
@@ -178,9 +162,15 @@ usort($results, function ($a, $b) {
     <section class="room-results">
         <h2>Recommended rooms</h2>
 
+        <?php if ($databaseError !== null): ?>
+            <div class="empty-results">
+                <h3>Database unavailable</h3>
+                <p><?= htmlspecialchars($databaseError) ?></p>
+            </div>
+        <?php endif; ?>
+
         <p class="demo-notice">
-            Demo mode: example measurements and simplified scores.
-            Live sensor data and AHP ranking are not connected yet.
+            Measurements come from the database. The score is still a simple demo formula, not AHP.
         </p>
 
         <p class="results-count">
